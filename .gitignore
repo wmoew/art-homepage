@@ -1,0 +1,16 @@
+# General
+.DS_Store
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+
+# output from webpack
+dist/
+
+.env
+.DS_Store
+dist/
+build/
