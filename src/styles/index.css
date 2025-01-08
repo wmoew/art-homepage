@@ -1,0 +1,16 @@
+.artwork-ontainer {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.artwork-image {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 20px 0;
+}
+
+.artwork-info {
+    margin-top: 20px;
+}
