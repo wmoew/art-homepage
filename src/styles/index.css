@@ -1,16 +1,55 @@
-.artwork-ontainer {
-    padding: 20px;
-    max-width: 800px;
+.artwork-page{
+    display: flex;
+    justify-content: left;
+    padding-top: 100px;
+    }
+
+
+.frame-container {
+    width: 100%;
+    max-width: 90%; /* Increase from default to take more screen space */
     margin: 0 auto;
+    display: flex;
+    gap: 2rem;
+}
+
+.frame {
+    width: 60%; /* Increase image container width */
 }
 
 .artwork-image {
-    max-width: 100%;
+    width: 100%;
     height: auto;
-    display: block;
-    margin: 20px 0;
+    object-fit: contain;
+    max-height: 90vh; /* Control maximum height relative to viewport */
 }
 
 .artwork-info {
-    margin-top: 20px;
+    font-family: 'Courier New', sans-serif;
+    width: 50%; /* Decrease info section width */
+    line-height: 1.2;
+    padding: 0 20px; /* Add some padding just to the info section */
+}
+h3 {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 1.3em;
+}
+p {
+    font-size: 1 em;
+}
+
+.myButton {
+    font-family: 'Courier New', Courier, monospace;
+    background-color:transparent;
+    border:1px solid black;
+    cursor:pointer;
+    font-size: 1.2em;
+    padding:24px 76px;
+}
+.myButton:hover {
+    background-color:lightyellow;
+}
+.myButton:active {
+    position:relative;
+    top:1px;
 }

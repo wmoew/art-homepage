@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
-import MyArtHomepage from './App';
 import Home from './pages/index';
 import './styles/index.css';
 

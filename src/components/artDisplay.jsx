@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { fetchRandomArtWork } from '../utils/metapi.js';
 
 const ArtDisplay = () => {
@@ -8,33 +8,31 @@ const ArtDisplay = () => {
     const [artwork, setArtwork] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [favStatus, setFavStatus] = useState('');
 
     useEffect (() => {
+        let isMounted = true;
+        const controller = new AbortController();
         console.log('Component mounted'); // Log when component mounts
+
         const getArtwork = async () => {
             console.log('Starting to fetch artwork...'); // Log start of fetch
             try {
-                const testResponse = await fetch('https://collectionapi.metmuseum.org/public/collection/v1/search?hasImages=true&?isHighlight=true&q=*');
-                console.log('Initial API response:', await testResponse.json());
-                
                 setLoading(true);
-                const data = await fetchRandomArtWork();
-                console.log('Artwork data received:', data);  // Add this line
+                const data = await fetchRandomArtWork(controller.signal);
+                console.log('Artwork data received:', data);
 
-                if (!data) {
-                    throw new Error('No data received from API');
-                }
-
-                setArtwork(data); // artwork = data
+                if (isMounted) {
+                    setArtwork(data);
+                    setError(null);
+                } // artwork = data
                 console.log('Artwork state set successfully'); // Log successful state update
             } catch (err) {
-
-                console.error('Error details:', {
-                    message: err.message,
-                    stack: err.stack,
-                    error: err
-                });
-
+                // Ignore AbortError
+                if (err.name !== 'AbortError') {
+                setError(error.message);
+            }
                 setError('Fail to load the artwork');
                 console.error('Artwork Loading Error:', err);
             } finally {
@@ -44,45 +42,81 @@ const ArtDisplay = () => {
         }
         getArtwork(); 
 
-        // Cleanup function
+        // Added cleanup function
         return () => {
-            console.log('Component unmounting'); // Log cleanup
+            isMounted = false;
+            controller.abort();
         };
 
     }, []);
 
-    // Log every render
-    console.log('Rendering with state:', {
-        loading,
-        error,
-        hasArtwork: !!artwork,
-        artworkData: artwork
-    });
+    // useEffect(() => {
+    //     // Fetch login status from backend
+    //     const checkLoginStatus = async () => {
+    //         const response = await fetch('http://localhost:5000/api/isLoggedIn', { credentials: 'include' });
+    //         setIsLoggedIn(response.ok);
+    //     };
+    //     checkLoginStatus();
+    // }, []);
+
+    const handleAddtoFav = async () => {
+        if (!isLoggedIn) {
+            setFavStatus('Please log in to add favorites');
+            return;
+        }
+        try {
+            const response = await fetch('http://localhost:3000/api/favorites', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ itemId: artwork.id }),
+                credentials: 'include',
+            });
+            if (!response.ok) {
+                const message = await response.json();
+                setFavStatus(message.error || 'Failed to add to favorites');
+                return;
+            }
+            setFavStatus('Added to favorites successfully');
+        } catch (err) {
+            setFavStatus('An unexpected error occurred');
+            console.error('Error adding to favorites:', err);
+        }
+    };
 
     if (loading) return <div>Loading...</div>;
     if (error) return <div>{error}</div>;
-    if (!artwork) return <div>No artwork found</div>;
 
     return (
-        <div className='artwork-container'>
-            <h3>{artwork.title}</h3>
-            {artwork.primaryImage ? (
-            <img 
-            src={artwork.primaryImage}
-            alt={artwork.title}
-            className="artwork-image"
-            onLoad={() => console.log('Image loaded successfully')}
-                    onError={(e) => {
-                        console.error('Image failed to load:', {
-                            src: e.target.src,
-                            error: e
-                        });
-                    }}
-            />) : (<div>No image available</div>)}
-            <div className='artwork-info'>
-                <p>{artwork.artistRole}:{artwork.artistDisplayName || 'Unknown'}</p>
-                <p>Time:{artwork.objectDate}</p>
-                <p>Medium:{artwork.medium}</p>
+        <div className='artwork-page'>
+            <div className="frame-container">
+                <div className='frame'>
+                {artwork.primaryImage ? (
+                <img 
+                src={artwork.primaryImage}
+                alt={artwork.title}
+                className="artwork-image"
+                onLoad={() => console.log('Image loaded successfully')}
+                />) : (<div>No image available</div>)}
+                </div>
+                <div className='artwork-info'>
+                    <h3>{artwork.title}</h3>
+                    <p>Department: {artwork.department}</p>
+                    <p>Culture: {artwork.culture}</p>
+                    <p>Artist: {artwork.artistDisplayName || 'Unknown'}</p>
+                    <p>Artist Nationality: {artwork.artistNationality}</p>
+                    <p>Time: {artwork.objectDate}</p>
+                    <p>Credit: {artwork.creditLine}</p>
+                    <p>Country: {artwork.country}</p>
+                    <p>City: {artwork.city}</p>
+                    <p>Medium: {artwork.medium}</p>
+                    <button 
+                    className='myButton'
+                    onClick={handleAddtoFav}
+                    >
+                    Add to My Favorite
+                    </button>
+                    {favStatus && <p className="fav-status">{favStatus}</p>}
+                </div>
             </div>
         </div>
     );
