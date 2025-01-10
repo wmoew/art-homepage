@@ -115,7 +115,10 @@ const ArtDisplay = () => {
                     >
                     Add to My Favorite
                     </button>
-                    {favStatus && <p className="fav-status">{favStatus}</p>}
+                    {favStatus 
+                    && <p className="fav-status">{favStatus}</p> 
+                    && <button className='login'>Log in/Sign up</button>
+                    }
                 </div>
             </div>
         </div>
