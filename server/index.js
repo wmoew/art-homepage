@@ -11,23 +11,28 @@ const sessionController = require('./controllers/sessionController');
 const userController = require('./controllers/userController');
 
 const app = express(); // creates a new Express application instance
-const PORT = process.env.PORT || 3001; // server will run on port 3001 or whatever port the hosting service specifies
+const PORT = process.env.SERVER_PORT || 3001; // server will run on port 3001 or SERVER_PORT
 
 //connect to MongoDB
 connectDB();
 
 //middleware
 
+// In your server/index.js
+app.use(cors({
+    origin: 'http://localhost:3000', // Be specific about the origin in development
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
 // Parse JSON bodies
 /* This line adds middleware that automatically:
 - Parses incoming JSON payloads in request bodies
 - Makes the parsed data available in req.body */
-app.use(cors({
-    origin: 'http://localhost:3000',
-    credentials: true, // For cookie-based sessions
-}));
+
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 //session config
@@ -37,10 +42,13 @@ app.use(session({
     saveUninitialized: false,
     cookie: {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 24 * 60 * 60 * 1000 // 1 day
+        secure: false, // Set to false for development
+        sameSite: 'lax',
+        maxAge: 24 * 60 * 60 * 1000
     }
 }));
+
+app.options('*', cors());
 
 /**
 * --- Express Routes ---
@@ -56,21 +64,36 @@ app.get('/api/test',(req, res) => {
 });
 
 //Auth routes
-app.post('/signup',
-    userController.createUser,
-    cookieController.setSSIDCookie,
-    sessionController.startSession,
-    (req, res) => res.status(200).json({ message: 'Sign up successfully' })
-);
+app.post('/auth/signup', async (req, res) => {
+    try {
+        console.log('Received signup request with body:', req.body); // Add this debug log
+        
+        if (!req.body || !req.body.username || !req.body.password) {
+            return res.status(400).json({ 
+                message: 'Missing required fields',
+                received: req.body 
+            });
+        }
+        
+        const result = await userController.createUser(req.body.username, req.body.password);
+        res.status(201).json({ message: 'User created successfully', user: result });
+    } catch (error) {
+        console.error('Signup error:', error);
+        res.status(500).json({ message: error.message });
+    }
+});
 
-app.post('/login',
+app.post('/auth/login',
     userController.verifyUser,
     cookieController.setSSIDCookie,
     sessionController.startSession,
-    (req, res) => res.status(200).json({ message: 'Logged in successfully' })
+    (req, res) => {
+        res.header('Access-Control-Allow-Credentials', 'true');
+        res.status(200).json({ message: 'Logged in successfully' });
+    }
 );
 
-app.post('/logout',
+app.post('/auth/logout',
     sessionController.endSession,
     cookieController.clearCookies,
     (req, res) => res.status(200).json({ message: 'Logged out successfully' })
@@ -90,13 +113,18 @@ app.get('*', (req, res) => {
     res.sendFile(path.resolve(__dirname, '../build', 'index.html'));
 });
 
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.url}`);
+    next();
+});
+
 //error handling
 app.use((err, req, res, next) => {
     console.error(err);
     res.status(500).json({ message: 'Internal Server Error' });
 });
 
-app.listen(PORT, ()=> {
+app.listen(PORT, () => {
     console.log(`Server is running on PORT ${PORT}`);
 });
 

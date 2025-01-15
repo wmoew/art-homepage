@@ -4,7 +4,8 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 const connectDB = async () => {
     try {
-        const connect = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/art_homepage', {
+        const connect = await mongoose.connect(
+            process.env.MONGODB_URI || 'mongodb://localhost:27017/art_homepage', {
             useNewUrlParser: true, // Enables the new URL string parser
             useUnifiedTopology: true //Enables the new Server Discovery and Monitoring engine
         });

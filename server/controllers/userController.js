@@ -15,28 +15,33 @@ userController.getAllUsers = (req, res, next) => {
 
 //createUser - create and save a new User into the database.
 
-userController.createUser = async (req, res, next) => {
-    const {username, password} = req.body;
+// In userController.js
+userController.createUser = async (username, password) => {
     if (!username || !password) {
-        return res.status(400).json({message: 'Username and password are required'});
+        throw new Error('Username and password are required');
     }
+    
     try {
         //check if the username exists
         const existingUser = await User.findOne({username});
         if(existingUser) {
-            return res.status(400).json({message: 'Username already exists'});
+            throw new Error('Username already exists');
         }
+        
         //create the new user
         const newUser = new User({username, password});
-        //insert new user document to database, also trigger pre-save hook (password hashing)
+        //insert new user document to database
         await newUser.save();
-        //res.locals.user = newUser; // Attach user to `res.locals` for the next middleware
-        res.status(201).json({message: 'User created sucessfully', user: {id: newUser._id, username: newUser.username}});
-    } catch (err) {
-        res.status(500).json({message: 'Server error for creating new user', error: err.message});
-        return;
+        
+        return {
+            id: newUser._id,
+            username: newUser.username
+        };
+    } catch (error) {
+        throw error;
     }
-}
+};
+
 /**
 * verifyUser - Obtain username and password from the request body, locate
 * the appropriate user in the database, and then authenticate the submitted password
@@ -45,19 +50,35 @@ userController.createUser = async (req, res, next) => {
 
 userController.verifyUser = async (req, res, next) => {
     try {
+        console.log('Login attempt - Request body:', req.body);
+        
         const {username, password} = req.body;
+        console.log('Extracted credentials - Username:', username, 'Password exists:', !!password);
+        
         const user = await User.findOne({username});
-        if (!user) return res.status(400).json({Error: 'Username does not exist.'});
+        console.log('Found user:', !!user);
+        
+        if (!user) {
+            console.log('User not found');
+            return res.status(400).json({Error: 'Username does not exist.'});
+        }
+        
+        console.log('Stored password hash exists:', !!user.password);
+        console.log('User document:', user); // Be careful not to log actual passwords
+        
         const isMatch = await user.matchPassword(password);
-        if (!isMatch) return res.status(401).json({Error: 'Invalid username and password combination'});
-
-        // Pass user data to sessionController and cookieController
-        // Attach user data for the next middleware
+        console.log('Password match result:', isMatch);
+        
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid username or password' });
+        }
+        
         res.locals.user = user;
         return next();
     } catch (err) {
+        console.error('Login error:', err);
         res.status(500).json({message: 'Server error for login', error: err.message});
-}
+    }
 };
 
 userController.addToFav = async (req, res, next) => {

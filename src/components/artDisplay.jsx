@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { fetchRandomArtWork } from '../utils/metapi.js';
+import { Link } from 'react-router-dom';
 
 const ArtDisplay = () => {
   // Same as:
@@ -115,10 +116,9 @@ const ArtDisplay = () => {
                     >
                     Add to My Favorite
                     </button>
-                    {favStatus 
-                    && <p className="fav-status">{favStatus}</p> 
-                    && <button className='login'>Log in/Sign up</button>
-                    }
+                    {favStatus && <p className="fav-status">{favStatus}</p>}
+                    <Link to="/auth" style={{ textDecoration: 'none', color: 'inherit' }}>
+                    Log in/Sign up</Link>
                 </div>
             </div>
         </div>
