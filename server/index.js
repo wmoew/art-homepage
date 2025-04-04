@@ -1,14 +1,15 @@
-const express = require('express'); 
-const cookieParser = require('cookie-parser');
-const session = require('express-session');
-const cors = require('cors');
-const path = require('path');
-require('dotenv').config();
+import express from 'express'; 
+import cookieParser from 'cookie-parser';
+import session from 'express-session';
+import cors from 'cors';
+import path from 'path';
+import User from './dbmodels/User';
+import 'dotenv/config';
 
-const connectDB = require('./config/db');
-const cookieController = require('./controllers/cookieController');
-const sessionController = require('./controllers/sessionController');
-const userController = require('./controllers/userController');
+import connectDB from './config/db';
+import cookieController from './controllers/cookieController';
+import sessionController from './controllers/sessionController';
+import userController from './controllers/userController';
 
 const app = express(); // creates a new Express application instance
 const PORT = process.env.SERVER_PORT || 3001; // server will run on port 3001 or SERVER_PORT
@@ -44,6 +45,7 @@ app.use(session({
         httpOnly: true,
         secure: false, // Set to false for development
         sameSite: 'lax',
+        path: '/',
         maxAge: 24 * 60 * 60 * 1000
     }
 }));
@@ -66,7 +68,7 @@ app.get('/api/test',(req, res) => {
 //Auth routes
 app.post('/auth/signup', async (req, res) => {
     try {
-        console.log('Received signup request with body:', req.body); // Add this debug log
+        console.log('Received signup request with body:', req.body);
         
         if (!req.body || !req.body.username || !req.body.password) {
             return res.status(400).json({ 
@@ -99,13 +101,88 @@ app.post('/auth/logout',
     (req, res) => res.status(200).json({ message: 'Logged out successfully' })
 );
 
+app.get('/auth/check', async (req, res) => {
+    try {
+        console.log('Auth check request received');
+        console.log('Cookies received:', req.cookies);
+        console.log('Session ID:', req.sessionID);
+        console.log('Session data:', req.session);
+        console.log('Session user ID:', req.session?.userId);
+      
+      // Explicitly set content type to JSON
+      res.setHeader('Content-Type', 'application/json');
+      
+      // Check if session exists and has a userId
+      if (req.session && req.session.userId) {
+        try {
+          // Get the user data to return the username
+          const user = await User.findById(req.session.userId).select('username');
+          console.log('User found:', user);
+          
+          return res.status(200).json({
+            authenticated: true,
+            userId: req.session.userId,
+            username: user ? user.username : 'User' // Add fallback
+          });
+        } catch (dbError) {
+          console.error('Database error:', dbError);
+          return res.status(200).json({
+            authenticated: true,
+            userId: req.session.userId,
+            username: 'User' // Fallback if database query fails
+          });
+        }
+      } else {
+        console.log('User is not authenticated');
+        return res.status(401).json({
+          authenticated: false,
+          message: 'Not authenticated'
+        });
+      }
+    } catch (error) {
+      console.error('Auth check error:', error);
+      return res.status(500).json({
+        authenticated: false,
+        message: 'Server error during authentication check'
+      });
+    }
+  });
+
+// Debug endpoint to check session and cookies
+app.get('/debug/session', (req, res) => {
+    try {
+      console.log('Debug endpoint called');
+      console.log('Headers:', req.headers);
+      console.log('Cookies:', req.cookies);
+      console.log('Session:', req.session);
+      
+      res.json({
+        cookies: req.cookies,
+        session: {
+          id: req.sessionID,
+          data: req.session,
+          userId: req.session?.userId
+        },
+        headers: {
+          cookie: req.headers.cookie,
+          authorization: req.headers.authorization,
+          origin: req.headers.origin
+        }
+      });
+    } catch (error) {
+      console.error('Error in debug endpoint:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
 // Protected routes (require authentication)
 app.use('/api', sessionController.isLoggedIn);
 
 //api routes
 app.get('/api/users', userController.getAllUsers);
+app.get('/api/favorites', userController.getFavorites);
 app.post('/api/favorites', userController.addToFav);
-
+app.delete('/api/favorites/:itemId', userController.removeFromFav);
 // Serve static files from the React app
 //__dirname is a Node.js global variable that represents the directory name of the current module.
 app.use(express.static(path.resolve(__dirname,'../build')));
@@ -128,4 +205,4 @@ app.listen(PORT, () => {
     console.log(`Server is running on PORT ${PORT}`);
 });
 
-module.exports = app;
+export default app;

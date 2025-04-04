@@ -1,6 +1,5 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
-const { type } = require('os');
+import mongoose from 'mongoose';
+import bcrypt from 'bcrypt';    
 
 const userSchema = new mongoose.Schema({
     username: {
@@ -40,13 +39,35 @@ const favScheme = new mongoose.Schema({
         ref: 'User',
         required: true
     },
-    itemId: {
+    artworkId: {
         type: String,
         required: true
+    },
+    title: {
+        type: String,
+        required: true
+    },
+    artist: {
+        type: String,
+        required: true
+    },
+    imageUrl: {
+        type: String,
+        required: true
+    },
+    department: {
+        type: String,
+        required: true
+    },
+    dateAdded: {
+        type: Date,
+        default: Date.now
     }
 }, { timestamps: true});
+
+favScheme.index({ user: 1, artworkId: 1 }, { unique: true });
 
 const Favorites = mongoose.model('Favorites', favScheme);
 
 
-module.exports = { User, Favorites };
+export { User, Favorites };

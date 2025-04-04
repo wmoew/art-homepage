@@ -1,6 +1,4 @@
-const mongoose = require('mongoose');
-const { type } = require('os');
-
+import mongoose from 'mongoose';
 
 //After 90 seconds, the session will automatically be removed from the collection
 
@@ -17,4 +15,4 @@ const sessionSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('Session', sessionSchema);
+export default mongoose.model('Session', sessionSchema);

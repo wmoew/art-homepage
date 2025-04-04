@@ -1,5 +1,4 @@
 const cookieController = {};
-
 //setCookie
 cookieController.setCookie = (req, res, next) => {
     const user = res.locals.user; // Retrieved from userController
@@ -40,5 +39,5 @@ cookieController.clearCookies = (req, res) => {
     res.status(200).json({ message: 'Cookies cleared' });
 };
 
-module.exports = cookieController;
+export default cookieController;
   
