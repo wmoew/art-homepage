@@ -2,7 +2,7 @@
 
 A modern web application for discovering and saving your favorite artwork from the Metropolitan Museum of Art collection.
 
-![Random Artwork Display](./images/artDisplay.png)
+![Random Artwork Display](./images/sample.png)
 
 ## Features
 
