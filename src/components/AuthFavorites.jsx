@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const AuthFavorites = ({ user }) => {
+const AuthFavorites = () => {
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -9,11 +9,6 @@ const AuthFavorites = ({ user }) => {
 
   useEffect(() => {
     // Check if user is logged in
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
-
     // Fetch user's favorites
     const fetchFavorites = async () => {
       try {
@@ -28,6 +23,11 @@ const AuthFavorites = ({ user }) => {
         });
 
         if (!response.ok) {
+          if (response.status === 401) {
+            // Not authenticated - redirect to login
+            navigate('/auth');
+            return;
+          }
           throw new Error('Failed to fetch favorites');
         }
 
@@ -42,7 +42,7 @@ const AuthFavorites = ({ user }) => {
     };
 
     fetchFavorites();
-  }, [user, navigate]);
+  }, [navigate]);
 
   const handleRemoveFavorite = async (artworkId) => {
     try {
@@ -55,11 +55,11 @@ const AuthFavorites = ({ user }) => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to remove from favorites: ${response.status}');
+        throw new Error(`Failed to remove from favorites: ${response.status}`)
       }
 
       // Update the favorites list by removing the deleted item
-      setFavorites(favorites.filter(art => art.id !== artworkId));
+      setFavorites(favorites.filter(art => art.artworkId !== artworkId));
     } catch (err) {
       console.error('Error removing favorite:', err);
       setError('Failed to remove from favorites. Please try again.');
@@ -92,19 +92,19 @@ const AuthFavorites = ({ user }) => {
       ) : (
         <div className="favorites-grid">
           {favorites.map(artwork => (
-            <div key={artwork.id} className="favorite-item">
+            <div key={artwork.artworkId} className="favorite-item">
               <img 
                 src={artwork.imageUrl} 
                 alt={artwork.title} 
                 className="favorite-thumbnail"
-                onClick={() => handleViewArtwork(artwork.id)}
+                onClick={() => handleViewArtwork(artwork.artworkId)}
               />
               <div className="favorite-details">
                 <h3>{artwork.title}</h3>
                 <p>{artwork.artist}</p>
                 <button 
                   className="myButton" 
-                  onClick={() => handleRemoveFavorite(artwork.id)}
+                  onClick={() => handleRemoveFavorite(artwork.artworkId)}
                 >
                   Remove
                 </button>

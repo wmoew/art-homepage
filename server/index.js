@@ -3,13 +3,20 @@ import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import cors from 'cors';
 import path from 'path';
-import User from './dbmodels/User';
+
 import 'dotenv/config';
 
-import connectDB from './config/db';
-import cookieController from './controllers/cookieController';
-import sessionController from './controllers/sessionController';
-import userController from './controllers/userController';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+import { User } from './dbmodels/User.js';
+import connectDB from './config/db.js';
+import cookieController from './controllers/cookieController.js';
+import sessionController from './controllers/sessionController.js';
+import userController from './controllers/userController.js';
+
 
 const app = express(); // creates a new Express application instance
 const PORT = process.env.SERVER_PORT || 3001; // server will run on port 3001 or SERVER_PORT
@@ -182,7 +189,8 @@ app.use('/api', sessionController.isLoggedIn);
 app.get('/api/users', userController.getAllUsers);
 app.get('/api/favorites', userController.getFavorites);
 app.post('/api/favorites', userController.addToFav);
-app.delete('/api/favorites/:itemId', userController.removeFromFav);
+app.delete('/api/favorites/:artworkId', userController.removeFromFav);
+
 // Serve static files from the React app
 //__dirname is a Node.js global variable that represents the directory name of the current module.
 app.use(express.static(path.resolve(__dirname,'../build')));

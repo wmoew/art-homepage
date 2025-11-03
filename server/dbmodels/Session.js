@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 
 //After 90 seconds, the session will automatically be removed from the collection
-
 const sessionSchema = new mongoose.Schema({
     cookieId: {
         type: String,

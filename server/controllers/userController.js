@@ -1,4 +1,4 @@
-import { User, Favorites } from '../dbmodels/User';
+import { User, Favorites } from '../dbmodels/User.js';
 
 // This file contains verifyUser, createUser and favorite management controllers
 const userController = {};

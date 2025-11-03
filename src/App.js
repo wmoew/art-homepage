@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LoginSignup from './components/loginSignup';
 import ArtDisplay from './components/artDisplay';
+import AuthFavorites from './components/AuthFavorites';
 
 function App() {
     const [user, setUser] = useState(null);
@@ -68,6 +69,7 @@ function App() {
             <Routes>
                 <Route path="/login" element={<LoginSignup onLoginSuccess={handleLoginSuccess} />} />
                 <Route path="/auth" element={<LoginSignup onLoginSuccess={handleLoginSuccess} />} />
+                <Route path="/favorite" element={<AuthFavorites user={user} />} />
                 <Route path="/" element={<ArtDisplay user={user} />} />
                 <Route path="*" element={<ArtDisplay user={user} />} />
             </Routes>
